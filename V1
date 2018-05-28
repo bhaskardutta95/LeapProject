@@ -1,0 +1,19 @@
+import java.io.*;
+public class FileRead {
+
+	public static void main(String[] args) throws IOException {
+		
+		File f  = new File("D:\\TextFileRead.txt");
+		
+		BufferedReader br = new BufferedReader(new FileReader(f));
+		
+		String keyword="exception";
+		String st;
+    
+		while((st = br.readLine())!= null)
+			if(st.contains(keyword))
+				System.out.println(st);	
+		
+	}
+
+}
