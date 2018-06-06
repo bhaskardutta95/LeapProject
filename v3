@@ -1,0 +1,88 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace v4
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            ReadTextFile();
+            
+        }
+
+        public static void ReadTextFile()
+        {
+            // Read each line of the file into a string array. Each element
+            // of the array is one line of the file.
+            List<ListModel> List = new List<ListModel>();
+            string[] lines = System.IO.File.ReadAllLines(@"D:\SystemOut_sample.txt");
+            foreach (var line in lines)
+            {
+                if (line.Trim() != "")
+                {
+                    ListModel list = new ListModel();
+                    list.Line = line;
+                    if (IsDate(line.Substring(1, 12)))
+                    {
+                        list.isFirstLine = true;
+                        if (/*line.ToLower().Contains("error") ||*/ line.ToLower().Contains("error"))
+                        {
+                            list.isException = true;
+                        }
+                    }
+                    List.Add(list);
+                }
+
+            }
+            DisplayException(List);
+            // Display the file contents by using a foreach loop.
+            System.Console.WriteLine("Contents of WriteLines2.txt = ");
+        }
+        public static bool IsDate(Object obj)
+        {
+            string strDate = obj.ToString();
+            try
+            {
+                DateTime dt = DateTime.Parse(strDate);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        public static void DisplayException(List<ListModel> list)
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                string exceptionMsg = "";
+                if (list[i].isException && list[i].isFirstLine)
+                {
+                    var tt = list[i].Line.Length;
+                    exceptionMsg = list[i].Line.Trim().Substring(list[i].Line.LastIndexOf(":") + 1);
+                    for (int j = i + 1; j < list.Count; j++)
+                    {
+                        if (!list[j].isFirstLine)
+                            exceptionMsg += list[j].Line;
+                        else
+                        {
+                            i = j - 1;
+                            break;
+                        }
+                    }
+                }
+                Console.WriteLine(exceptionMsg);
+            }
+        }
+        public class ListModel
+        {
+            public string Line { get; set; }
+            public bool isFirstLine { get; set; }
+            public bool isException { get; set; }
+        }
+    }
+}
