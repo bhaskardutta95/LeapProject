@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace v4
 {
@@ -10,14 +11,13 @@ namespace v4
     {
         static void Main(string[] args)
         {
-            ReadTextFile();
-            
+            ReadTextFile();   
         }
 
         public static void ReadTextFile()
         {
-            // Read each line of the file into a string array. Each element
-            // of the array is one line of the file.
+            // Read each line of the file into a string array. 
+            // Each element of the array is one line of the file.
             List<ListModel> List = new List<ListModel>();
             string[] lines = System.IO.File.ReadAllLines(@"D:\SystemOut_sample.txt");
             foreach (var line in lines)
@@ -26,7 +26,7 @@ namespace v4
                 {
                     ListModel list = new ListModel();
                     list.Line = line;
-                    if (IsDate(line.Substring(1, 12)))
+                    if (IsDate(line.Substring(1, 12))) //[01/01/2018] date format 
                     {
                         list.isFirstLine = true;
                         if (/*line.ToLower().Contains("error") ||*/ line.ToLower().Contains("error"))
@@ -38,9 +38,10 @@ namespace v4
                 }
 
             }
-            DisplayException(List);
+            StreamWriter writer = new StreamWriter("D:\\log.txt", true);
+            DisplayException(List,writer);
             // Display the file contents by using a foreach loop.
-            System.Console.WriteLine("Contents of WriteLines2.txt = ");
+            //Console.WriteLine("Contents of WriteLines2.txt = ");
         }
         public static bool IsDate(Object obj)
         {
@@ -55,7 +56,7 @@ namespace v4
                 return false;
             }
         }
-        public static void DisplayException(List<ListModel> list)
+        public static void DisplayException(List<ListModel> list, StreamWriter writer)
         {
             for (int i = 0; i < list.Count; i++)
             {
@@ -75,7 +76,9 @@ namespace v4
                         }
                     }
                 }
-                Console.WriteLine(exceptionMsg);
+                //Console.WriteLine(exceptionMsg);
+                writer.WriteLine(exceptionMsg);
+
             }
         }
         public class ListModel
