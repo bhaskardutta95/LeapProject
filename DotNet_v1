@@ -1,43 +1,101 @@
 using System;
-using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
+using System.Net.Mail;
 
-namespace LeapProject_3
+namespace v5
 {
     class Program
     {
         static void Main(string[] args)
         {
-            FileStream inFile = new FileStream(@"D:\TextFileRead.txt", FileMode.Open, FileAccess.Read);
-            StreamReader reader = new StreamReader(inFile);
-            string record;
-            string input = "exception";
-             
-            try
+            ReadTextFile();            
+        }
+
+        public static void ReadTextFile()
         {
-            //the program reads the record and displays it on the screen
-            record = reader.ReadLine();
-            while (record != null)
+             // Read each line of the file into a string array. 
+            // Each element of the array is one line of the file.
+            List<ListModel> List = new List<ListModel>();
+            string[] lines = System.IO.File.ReadAllLines(@"D:\SystemOut_sample.txt");
+            foreach (var line in lines)
             {
-                if (record.Contains(input))
+                if (line.Trim() != "")
                 {
-                    Console.WriteLine(record);
+                    ListModel list = new ListModel();
+                    list.Line = line;
+                    if (IsDate(line.Substring(1, 12))) //[01/01/2018] date format 
+                    {
+                        list.isFirstLine = true;
+                        if (line.ToLower().Contains("error"))
+                        {
+                            list.isException = true;
+                        }
+                    }
+                    
+                        List.Add(list);           
                 }
-                    record = reader.ReadLine();
+
+            }
+
+            StreamWriter writer = new StreamWriter("D:\\log.txt", true);
+            DisplayException(List, writer);
+        }
+
+        //public static void SendMail(String FilePath)
+        //{
+        //    string body = File.ReadAllText(@"C:\\MyPath\\file.txt");
+
+        //    MailMessage mail = new MailMessage("you@you.com", "them@them.com");
+        //    SmtpClient client = new SmtpClient();
+        //    client.Port = 25;
+        //    client.DeliveryMethod = SmtpDeliveryMethod.Network;
+        //    client.UseDefaultCredentials = false;
+        //    client.Host = "smtp.google.com";
+        //    mail.Subject = "file";
+
+        //    // Set the read file as the body of the message
+        //    mail.Body = body;
+
+        //    // Send the email
+        //    client.Send(mail);
+        //}
+
+        public static bool IsDate(Object obj)
+        {
+            string strDate = obj.ToString();
+            try
+            {
+                DateTime dt = DateTime.Parse(strDate);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
-        finally
+        public static void DisplayException(List<ListModel> list, StreamWriter writer)
         {
-            //after the record is done being read, the progam closes
-            reader.Close();
-            inFile.Close();
+            for (int i = 0; i < list.Count; i++)
+            {
+                string exceptionMsg = "";
+               
+                if (list[i].isException && list[i].isFirstLine)
+                {
+                   exceptionMsg = list[i].Line;
+                }
+                writer.WriteLine(exceptionMsg);
+
+            }
         }
-        Console.ReadLine();
-    }
-            
+        public class ListModel
+        {
+            public string Line { get; set; }
+            public bool isFirstLine { get; set; }
+            public bool isException { get; set; }
         }
     }
-                            
+}
