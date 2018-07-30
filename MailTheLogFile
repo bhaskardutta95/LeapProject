@@ -1,0 +1,113 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.IO;
+using System.Net.Mail;
+
+namespace LeapProject_4
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            string SystemOutPath = "D:\\SystemOut_sample.txt";
+            string WritePath = "D:\\log.txt";
+            ReadTextFile(SystemOutPath,WritePath);
+        }
+
+        public static void ReadTextFile(string SysOutPath, string WriteFilePath)
+        {
+            // Read each line of the file into a string array. 
+            // Each element of the array is one line of the file.
+            List<ListModel> List = new List<ListModel>();
+            string[] lines = System.IO.File.ReadAllLines(SysOutPath);
+            foreach (var line in lines)
+            {
+                if (line.Trim() != "")
+                {
+                    ListModel list = new ListModel();
+                    list.Line = line;
+                    if (IsDate(line.Substring(1, 12))) //[01/01/2018] date format 
+                    {
+                        list.isFirstLine = true;
+                        if (line.ToLower().Contains("error"))
+                        {
+                            list.isException = true;
+                        }
+                    }
+
+                    List.Add(list);
+                }
+
+            }
+            StreamWriter writer = new StreamWriter(WriteFilePath, true);
+            DisplayException(List, writer);
+            writer.Close();
+
+            if (new FileInfo(WriteFilePath).Length < 30)
+            {
+                File.Delete(WriteFilePath);
+                //Console.WriteLine("No error");
+            }
+            else
+            {
+                //Console.WriteLine("Error");
+                SendMail(WriteFilePath);
+            }
+        }
+
+        public static void SendMail(String FilePath)
+        {
+            string body = File.ReadAllText(FilePath);
+
+            MailMessage mail = new MailMessage("Bhaskar11.Dutta@nttdata.com", "Bhaskar11.Dutta@nttdata.com"); //from to
+            SmtpClient client = new SmtpClient();
+            client.Port = 25;
+            client.DeliveryMethod = SmtpDeliveryMethod.Network;
+            client.UseDefaultCredentials = false;
+            client.Host = "smtp.tenethealth.net";
+            mail.Subject = "log";
+
+            // Set the read file as the body of the message
+            mail.Body = body;
+            client.Send(mail);
+        }
+
+        public static bool IsDate(Object obj)
+        {
+            string strDate = obj.ToString();
+            try
+            {
+                DateTime dt = DateTime.Parse(strDate);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        public static void DisplayException(List<ListModel> list, StreamWriter writer)
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                string exceptionMsg = "";
+
+                if (list[i].isException && list[i].isFirstLine)
+                {
+                    exceptionMsg = list[i].Line;
+                }
+                writer.WriteLine(exceptionMsg);
+
+            }
+        }
+        public class ListModel
+        {
+            public string Line { get; set; }
+            public bool isFirstLine { get; set; }
+            public bool isException { get; set; }
+        }
+    }
+}
+
