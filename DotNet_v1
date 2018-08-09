@@ -36,10 +36,10 @@ namespace LeapProject_4
             // overwrite the destination file if it already exists.
             System.IO.File.Copy(sourceFile, destFile, true);
 
-            ReadTextFile(SourcePath, TargetPath, FileName, NewFileName);
+            ReadTextFile(TargetPath ,FileName, NewFileName);
         }
 
-        public static void ReadTextFile(string SysOutPath, string WriteFilePath, string SysOutFileName, string NewSysOutFileName)
+        public static void ReadTextFile(string SysOutPath,  string SysOutFileName, string NewSysOutFileName)
         {
             // Read each line of the file into a string array. 
             // Each element of the array is one line of the file.
@@ -70,7 +70,7 @@ namespace LeapProject_4
             }
 
             //combining new systemout path and the new file name
-            string NewPathFile = System.IO.Path.Combine(WriteFilePath, NewSysOutFileName);
+            string NewPathFile = System.IO.Path.Combine(SysOutPath, NewSysOutFileName);
             StreamWriter writer = new StreamWriter(NewPathFile, true);
             DisplayException(List, writer);
             writer.Close();
