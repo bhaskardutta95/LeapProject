@@ -6,21 +6,49 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Net.Mail;
 
-namespace v5
+namespace LeapProject_4
 {
     class Program
     {
+        
         static void Main(string[] args)
         {
-            ReadTextFile();            
+
+            string fileName = "SystemOut.log";
+            string newfileName = "NewSystemOut.txt";
+            string sourcePath = @"D:\\Program Files\\IBM\\WebSphere\\AppServer\\profiles\\AppSrv01\\logs\\HDI-Model-AppSvr01";
+            string targetPath = @"D:\\LeapProject\\LogFile";
+
+            CopyFile(fileName, sourcePath, targetPath, newfileName);
+
+            
         }
 
-        public static void ReadTextFile()
+        public static void CopyFile(string FileName, string SourcePath, string TargetPath, string NewFileName)
         {
-             // Read each line of the file into a string array. 
+
+
+            // Use Path class to manipulate file and directory paths.
+            string sourceFile = System.IO.Path.Combine(SourcePath, FileName);
+            string destFile = System.IO.Path.Combine(TargetPath, FileName);
+
+            // To copy a file to another location and 
+            // overwrite the destination file if it already exists.
+            System.IO.File.Copy(sourceFile, destFile, true);
+
+            ReadTextFile(SourcePath, TargetPath, FileName, NewFileName);
+        }
+
+        public static void ReadTextFile(string SysOutPath, string WriteFilePath, string SysOutFileName, string NewSysOutFileName)
+        {
+            // Read each line of the file into a string array. 
             // Each element of the array is one line of the file.
             List<ListModel> List = new List<ListModel>();
-            string[] lines = System.IO.File.ReadAllLines(@"D:\SystemOut_sample.txt");
+
+            //combining System out file path and the file name
+            string SourceSysOut = System.IO.Path.Combine(SysOutPath, SysOutFileName);
+
+            string[] lines = System.IO.File.ReadAllLines(SourceSysOut);
             foreach (var line in lines)
             {
                 if (line.Trim() != "")
@@ -35,32 +63,44 @@ namespace v5
                             list.isException = true;
                         }
                     }
-                    
-                        List.Add(list);           
+
+                    List.Add(list);
                 }
 
             }
 
-            StreamWriter writer = new StreamWriter("D:\\log.txt", true);
+            //combining new systemout path and the new file name
+            string NewPathFile = System.IO.Path.Combine(WriteFilePath, NewSysOutFileName);
+            StreamWriter writer = new StreamWriter(NewPathFile, true);
             DisplayException(List, writer);
+            writer.Close();
+
+            if (new FileInfo(NewPathFile).Length < 30)
+            {
+                File.Delete(NewPathFile);
+                //Console.WriteLine("No error");
+            }
+            else
+            {
+                //Console.WriteLine("Error");
+                //SendMail(NewPathFile);
+            }
         }
 
         public static void SendMail(String FilePath)
         {
-            string body = File.ReadAllText(@"C:\\MyPath\\file.txt");
+            string body = File.ReadAllText(FilePath);
 
-            MailMessage mail = new MailMessage("from","to");
+            MailMessage mail = new MailMessage("form@domain.com", "to@domain.com");
             SmtpClient client = new SmtpClient();
             client.Port = 25;
             client.DeliveryMethod = SmtpDeliveryMethod.Network;
             client.UseDefaultCredentials = false;
-            client.Host = "smtp.tenet.net";
+            client.Host = "smtp.tenethealth.net";
             mail.Subject = "log";
 
             // Set the read file as the body of the message
             mail.Body = body;
-
-            // Send the email
             client.Send(mail);
         }
 
@@ -82,10 +122,10 @@ namespace v5
             for (int i = 0; i < list.Count; i++)
             {
                 string exceptionMsg = "";
-               
+
                 if (list[i].isException && list[i].isFirstLine)
                 {
-                   exceptionMsg = list[i].Line;
+                    exceptionMsg = list[i].Line;
                 }
                 writer.WriteLine(exceptionMsg);
 
@@ -99,3 +139,4 @@ namespace v5
         }
     }
 }
+
