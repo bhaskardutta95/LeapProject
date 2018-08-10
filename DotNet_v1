@@ -14,12 +14,15 @@ namespace LeapProject_4
         static void Main(string[] args)
         {
 
-            string fileName = "SystemOut.log";
+
+
+            string fileName = "SystemOut_sample.txt";
             string newfileName = "NewSystemOut.txt";
-            string sourcePath = @"D:\\Program Files\\IBM\\WebSphere\\AppServer\\profiles\\AppSrv01\\logs\\HDI-Model-AppSvr01";
-            string targetPath = @"D:\\LeapProject\\LogFile";
+            string sourcePath = @"D:\offline\SystemOutFiles";
+            string targetPath = @"D:\offline\SystemOutFiles\NewPath";
 
             CopyFile(fileName, sourcePath, targetPath, newfileName);
+            //DeleteFile(sourcePath, targetPath, fileName,newfileName);
 
             
         }
@@ -61,48 +64,25 @@ namespace LeapProject_4
                         if (line.ToLower().Contains("error"))
                         {
                             list.isException = true;
+                            List.Add(list);
+                            //combining new systemout path and the new file name
+                            string NewPathFile = System.IO.Path.Combine(SysOutPath, NewSysOutFileName);
+                            StreamWriter writer = new StreamWriter(NewPathFile, true);
+                            DisplayException(List, writer);
+                            writer.Close();
                         }
                     }
-
-                    List.Add(list);
                 }
 
             }
 
-            //combining new systemout path and the new file name
-            string NewPathFile = System.IO.Path.Combine(SysOutPath, NewSysOutFileName);
-            StreamWriter writer = new StreamWriter(NewPathFile, true);
-            DisplayException(List, writer);
-            writer.Close();
 
-            if (new FileInfo(NewPathFile).Length < 30)
-            {
-                File.Delete(NewPathFile);
-                //Console.WriteLine("No error");
-            }
-            else
-            {
-                //Console.WriteLine("Error");
-                //SendMail(NewPathFile);
-            }
+
+            SendMail(NewPathFile);
+
         }
 
-        public static void SendMail(String FilePath)
-        {
-            string body = File.ReadAllText(FilePath);
 
-            MailMessage mail = new MailMessage("form@domain.com", "to@domain.com");
-            SmtpClient client = new SmtpClient();
-            client.Port = 25;
-            client.DeliveryMethod = SmtpDeliveryMethod.Network;
-            client.UseDefaultCredentials = false;
-            client.Host = "smtp.tenethealth.net";
-            mail.Subject = "log";
-
-            // Set the read file as the body of the message
-            mail.Body = body;
-            client.Send(mail);
-        }
 
         public static bool IsDate(Object obj)
         {
@@ -131,6 +111,34 @@ namespace LeapProject_4
 
             }
         }
+
+
+        public static void SendMail(String FilePath)
+        {
+            string body = File.ReadAllText(FilePath);
+
+            MailMessage mail = new MailMessage("form@domain.com", "to@domain.com");
+            SmtpClient client = new SmtpClient();
+            client.Port = 25;
+            client.DeliveryMethod = SmtpDeliveryMethod.Network;
+            client.UseDefaultCredentials = false;
+            client.Host = "smtp.tenethealth.net";
+            mail.Subject = "log";
+
+            // Set the read file as the body of the message
+            mail.Body = body;
+            client.Send(mail);
+        }
+
+        public static void DeleteFile(string Fpath, string Spath, string Ffile, string Sfile)
+        {
+            string delete1 = System.IO.Path.Combine(Fpath,Ffile);
+            string delete2 = System.IO.Path.Combine(Spath,Sfile);
+
+            File.Delete(delete1);
+            File.Delete(delete2);
+        }
+
         public class ListModel
         {
             public string Line { get; set; }
