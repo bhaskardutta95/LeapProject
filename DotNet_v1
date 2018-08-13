@@ -81,7 +81,7 @@ namespace LeapProject_5
                 }
 
             }
-            //SendMail(ErrorLogFile, TargetPath);
+            SendMail(ErrorLogFile, TargetPath);
 
         }
 
