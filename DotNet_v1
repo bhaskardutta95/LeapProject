@@ -6,58 +6,65 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Net.Mail;
 
-namespace LeapProject_4
+namespace LeapProject_5
 {
     class Program
     {
-        
+        public static string SourcePath = @"D:\offline\SystemOutFiles";
+        public static string SourceFile = "SystemOut_NoError.txt";
+        public static string TargetPath = @"D:\offline\SystemOutFiles\NewPath";
+        public static string TargetFile = "ErrorLogFile.txt";
+
+
+        //public static string SourcePath = @"D:\\Program Files\\IBM\\WebSphere\\AppServer\\profiles\\AppSrv01\\logs\\HDI-Model-AppSvr01";
+        //public static string SourceFile = "SystemOut.log";
+        //public static string TargetPath = @"D:\\LeapProject\\LogFile";
+        //public static string TargetFile = "NewSystemOut.txt";
+
+        public static string SourceFilePath = System.IO.Path.Combine(SourcePath, SourceFile);
+        public static string TargetFilePath = System.IO.Path.Combine(TargetPath, SourceFile);
+
+        public static string ErrorLogFile = System.IO.Path.Combine(TargetPath, TargetFile); 
+
+
         static void Main(string[] args)
         {
 
-
-
-            string fileName = "SystemOut_sample.txt";
-            string newfileName = "NewSystemOut.txt";
-            string sourcePath = @"D:\offline\SystemOutFiles";
-            string targetPath = @"D:\offline\SystemOutFiles\NewPath";
-
-            CopyFile(fileName, sourcePath, targetPath, newfileName);
-            //DeleteFile(sourcePath, targetPath, fileName,newfileName);
-
-            
+            CopyFile();
+            //ReadTextFile(TargetPathSourceFile, TargetFilePath);
+            //SendMail(TargetFilePath);
+            //DeleteFile(TargetFilePath, ErrorLogFile);
+            //DeleteDir(TargetPath);
+            //FileExists(ErrorLogFile);
         }
 
-        public static void CopyFile(string FileName, string SourcePath, string TargetPath, string NewFileName)
+        public static void CopyFile()
         {
-
-
-            // Use Path class to manipulate file and directory paths.
-            string sourceFile = System.IO.Path.Combine(SourcePath, FileName);
-            string destFile = System.IO.Path.Combine(TargetPath, FileName);
 
             // To copy a file to another location and 
             // overwrite the destination file if it already exists.
-            System.IO.File.Copy(sourceFile, destFile, true);
+            System.IO.File.Copy(SourceFilePath, TargetFilePath, true);
 
-            ReadTextFile(TargetPath ,FileName, NewFileName);
+            //Calling ReadTextFile()
+            ReadTextFile(TargetFilePath, ErrorLogFile);
         }
 
-        public static void ReadTextFile(string SysOutPath,  string SysOutFileName, string NewSysOutFileName)
+        public static void ReadTextFile(string targetFilePath, string errorLogFile)
         {
             // Read each line of the file into a string array. 
             // Each element of the array is one line of the file.
             List<ListModel> List = new List<ListModel>();
 
-            //combining System out file path and the file name
-            string SourceSysOut = System.IO.Path.Combine(SysOutPath, SysOutFileName);
-
-            string[] lines = System.IO.File.ReadAllLines(SourceSysOut);
+            string[] lines = System.IO.File.ReadAllLines(targetFilePath);
+            //Seperating each line
             foreach (var line in lines)
             {
+                //removing spaces
                 if (line.Trim() != "")
                 {
                     ListModel list = new ListModel();
                     list.Line = line;
+                    //Date encounter : new line begins
                     if (IsDate(line.Substring(1, 12))) //[01/01/2018] date format 
                     {
                         list.isFirstLine = true;
@@ -65,20 +72,16 @@ namespace LeapProject_4
                         {
                             list.isException = true;
                             List.Add(list);
-                            //combining new systemout path and the new file name
-                            string NewPathFile = System.IO.Path.Combine(SysOutPath, NewSysOutFileName);
-                            StreamWriter writer = new StreamWriter(NewPathFile, true);
+                            StreamWriter writer = new StreamWriter(ErrorLogFile, true);
                             DisplayException(List, writer);
                             writer.Close();
+                            
                         }
                     }
                 }
 
             }
-
-
-
-            SendMail(NewPathFile);
+            //SendMail(ErrorLogFile, TargetPath);
 
         }
 
@@ -113,30 +116,50 @@ namespace LeapProject_4
         }
 
 
-        public static void SendMail(String FilePath)
+        public static void SendMail(string error_LogFile, string targetPath)
         {
-            string body = File.ReadAllText(FilePath);
 
-            MailMessage mail = new MailMessage("form@domain.com", "to@domain.com");
-            SmtpClient client = new SmtpClient();
-            client.Port = 25;
-            client.DeliveryMethod = SmtpDeliveryMethod.Network;
-            client.UseDefaultCredentials = false;
-            client.Host = "smtp.tenethealth.net";
-            mail.Subject = "log";
+            if (FileExists(error_LogFile) == true)
+            {
+                string body = File.ReadAllText(error_LogFile);
 
-            // Set the read file as the body of the message
-            mail.Body = body;
-            client.Send(mail);
+                MailMessage mail = new MailMessage("form@domain.com", "to@domain.com");
+                SmtpClient client = new SmtpClient();
+                client.Port = 25;
+                client.DeliveryMethod = SmtpDeliveryMethod.Network;
+                client.UseDefaultCredentials = false;
+                client.Host = "smtp.tenethealth.net";
+                mail.Subject = "SystemOut LogFile";
+
+                // Set the read file as the body of the message
+                mail.Body = body;
+                client.Send(mail);
+                DeleteDir(targetPath);
+            }
+            else
+            {
+                DeleteDir(targetPath);
+            }
+
+
         }
 
-        public static void DeleteFile(string Fpath, string Spath, string Ffile, string Sfile)
-        {
-            string delete1 = System.IO.Path.Combine(Fpath,Ffile);
-            string delete2 = System.IO.Path.Combine(Spath,Sfile);
 
-            File.Delete(delete1);
-            File.Delete(delete2);
+        public static void DeleteDir(string DirDelete)
+        {
+            System.IO.DirectoryInfo di = new DirectoryInfo(DirDelete);
+
+                foreach (FileInfo file in di.GetFiles())
+                    {
+                        file.Delete(); 
+                    }
+        }
+
+        public static bool FileExists(string path)
+        {
+            if (File.Exists(path))
+                return true;
+            return false;
         }
 
         public class ListModel
