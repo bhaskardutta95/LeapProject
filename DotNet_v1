@@ -21,9 +21,11 @@ namespace LeapProject_5
 
         public static string ErrorLogFile = System.IO.Path.Combine(TargetPath, TargetFile);
 
-        public static string MailFrom = "Bhaskar11.Dutta@tenethealth.com";
-        public static string MailTo = "Gaurav.Chugh@nttdata.com";
-        //public static string MailTo = "Chetna11.Gupta@nttdata.com";
+        public static string MailFrom = "ErrorLog_SystemOut@tenethealth.com";
+        public static string MailTo = "Chetna11.Gupta@nttdata.com";
+
+        public static string MailBody = "PFA the Error Logs in the SystemOut File";
+        public static string MailSubject = "Error Log - SystemOut";
 
         static void Main(string[] args)
         {
@@ -40,16 +42,16 @@ namespace LeapProject_5
             System.IO.File.Copy(SourceFilePath, TargetFilePath, true);
 
             //Calling ReadTextFile()
-            ReadTextFile(TargetFilePath, ErrorLogFile);
+            ReadTextFile();
         }
 
-        public static void ReadTextFile(string targetFilePath, string errorLogFile)
+        public static void ReadTextFile()
         {
             // Read each line of the file into a string array. 
             // Each element of the array is one line of the file.
             List<ListModel> List = new List<ListModel>();
 
-            string[] lines = System.IO.File.ReadAllLines(targetFilePath);
+            string[] lines = System.IO.File.ReadAllLines(TargetFilePath);
             //Seperating each line
             foreach (var line in lines)
             {
@@ -75,8 +77,8 @@ namespace LeapProject_5
                 }
 
             }
-
-            SendMail(ErrorLogFile, TargetPath, MailTo, MailFrom);
+            
+            SendMail();
         }
 
 
@@ -110,38 +112,39 @@ namespace LeapProject_5
         }
 
 
-        public static void SendMail(string error_LogFile, string targetPath, string mailTo, string mailFrom)
+        public static void SendMail()
         {
 
-            if (FileExists(error_LogFile) == true)
+            if (FileExists() == true)
             {
-                string body = File.ReadAllText(error_LogFile);
-
-                MailMessage mail = new MailMessage(mailFrom, mailTo);
+                MailMessage mail = new MailMessage(MailFrom, MailTo);
                 SmtpClient client = new SmtpClient();
                 client.Port = 25;
                 client.DeliveryMethod = SmtpDeliveryMethod.Network;
                 client.UseDefaultCredentials = false;
                 client.Host = "smtp.tenethealth.net";
-                mail.Subject = "SystemOut LogFile";
 
-                // Set the read file as the body of the message
-                mail.Body = body;
+                mail.Subject = MailSubject;
+                mail.Body = MailBody;
+                mail.Attachments.Add(new Attachment(ErrorLogFile));
+
                 client.Send(mail);
-                DeleteDir(targetPath);
+                mail.Dispose();
+                DeleteDir();
             }
             else
             {
-                DeleteDir(targetPath);
+                DeleteDir();
             }
 
 
         }
 
 
-        public static void DeleteDir(string DirDelete)
+        public static void DeleteDir()
         {
-            System.IO.DirectoryInfo di = new DirectoryInfo(DirDelete);
+
+            System.IO.DirectoryInfo di = new DirectoryInfo(TargetPath);
 
                 foreach (FileInfo file in di.GetFiles())
                     {
@@ -149,9 +152,9 @@ namespace LeapProject_5
                     }
         }
 
-        public static bool FileExists(string path)
+        public static bool FileExists()
         {
-            if (File.Exists(path))
+            if (File.Exists(ErrorLogFile))
                 return true;
             return false;
         }
