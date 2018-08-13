@@ -10,32 +10,26 @@ namespace LeapProject_5
 {
     class Program
     {
-        public static string SourcePath = @"D:\offline\SystemOutFiles";
-        public static string SourceFile = "SystemOut_NoError.txt";
-        public static string TargetPath = @"D:\offline\SystemOutFiles\NewPath";
-        public static string TargetFile = "ErrorLogFile.txt";
-
-
         //public static string SourcePath = @"D:\\Program Files\\IBM\\WebSphere\\AppServer\\profiles\\AppSrv01\\logs\\HDI-Model-AppSvr01";
-        //public static string SourceFile = "SystemOut.log";
-        //public static string TargetPath = @"D:\\LeapProject\\LogFile";
-        //public static string TargetFile = "NewSystemOut.txt";
+        public static string SourcePath = @"D:\\LeapProject";
+        public static string SourceFile = "SystemOut_sample.txt";
+        public static string TargetPath = @"D:\\LeapProject\\LogFile";
+        public static string TargetFile = "ErrorLogFile.txt";
 
         public static string SourceFilePath = System.IO.Path.Combine(SourcePath, SourceFile);
         public static string TargetFilePath = System.IO.Path.Combine(TargetPath, SourceFile);
 
-        public static string ErrorLogFile = System.IO.Path.Combine(TargetPath, TargetFile); 
+        public static string ErrorLogFile = System.IO.Path.Combine(TargetPath, TargetFile);
 
+        public static string MailFrom = "Bhaskar11.Dutta@tenethealth.com";
+        public static string MailTo = "Gaurav.Chugh@nttdata.com";
+        //public static string MailTo = "Chetna11.Gupta@nttdata.com";
 
         static void Main(string[] args)
         {
 
             CopyFile();
-            //ReadTextFile(TargetPathSourceFile, TargetFilePath);
-            //SendMail(TargetFilePath);
-            //DeleteFile(TargetFilePath, ErrorLogFile);
-            //DeleteDir(TargetPath);
-            //FileExists(ErrorLogFile);
+
         }
 
         public static void CopyFile()
@@ -81,8 +75,8 @@ namespace LeapProject_5
                 }
 
             }
-            SendMail(ErrorLogFile, TargetPath);
 
+            SendMail(ErrorLogFile, TargetPath, MailTo, MailFrom);
         }
 
 
@@ -116,14 +110,14 @@ namespace LeapProject_5
         }
 
 
-        public static void SendMail(string error_LogFile, string targetPath)
+        public static void SendMail(string error_LogFile, string targetPath, string mailTo, string mailFrom)
         {
 
             if (FileExists(error_LogFile) == true)
             {
                 string body = File.ReadAllText(error_LogFile);
 
-                MailMessage mail = new MailMessage("form@domain.com", "to@domain.com");
+                MailMessage mail = new MailMessage(mailFrom, mailTo);
                 SmtpClient client = new SmtpClient();
                 client.Port = 25;
                 client.DeliveryMethod = SmtpDeliveryMethod.Network;
