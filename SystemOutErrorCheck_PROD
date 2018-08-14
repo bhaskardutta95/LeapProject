@@ -1,0 +1,224 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.IO;
+using System.Net.Mail;
+
+namespace LeapProject_5
+{
+    class Program
+    {
+        //Directory to be deleted after execution
+        public static string DeleteDirectory = @"D:\\offline\\SystemOutFiles\\NewPath";
+
+        //SystemOut files 01,02 will be copied here
+        public static string TargetPath01 = @"D:\\offline\\SystemOutFiles\\NewPath\\ReadThis01";
+        public static string TargetPath02 = @"D:\\offline\\SystemOutFiles\\NewPath\\ReadThis02";
+
+        //source path AppSrv
+        public static string SourcePath01 = @"D:\\offline\\SystemOutFiles\\App01";
+        public static string SourcePath02 = @"D:\\offline\\SystemOutFiles\\App02";
+
+        //SystemOut File names
+        public static string SourceFile = "SystemOut_sample.txt";
+
+        //ErrorLog file to be created
+        public static string TargetFile01 = "ErrorLogFile01.txt";
+        public static string TargetFile02 = "ErrorLogFile02.txt";
+
+        //Original Path + Original File Name
+        public static string SourceFilePath01 = System.IO.Path.Combine(SourcePath01, SourceFile);
+        public static string SourceFilePath02 = System.IO.Path.Combine(SourcePath02, SourceFile);
+
+        //New Path + Original File Name
+        public static string TargetFilePath01 = System.IO.Path.Combine(TargetPath01, SourceFile);
+        public static string TargetFilePath02 = System.IO.Path.Combine(TargetPath02, SourceFile);
+
+        //New Path + Error Log File Name
+        public static string ErrorLogFile01 = System.IO.Path.Combine(TargetPath01, TargetFile01);
+        public static string ErrorLogFile02 = System.IO.Path.Combine(TargetPath02, TargetFile02);
+
+        //Mailing Details
+        public static string MailFrom = "ErrorLog_SystemOut@tenethealth.com";
+        public static string MailTo = "Bhaskar11.Dutta@nttdata.com";
+
+        public static string MailBody = "PFA the Error Logs in the SystemOut File";
+        public static string MailSubject = "Error Log - SystemOut";
+
+        static void Main(string[] args)
+        {
+
+            CopyFile();
+        }
+
+        public static void CopyFile()
+        {
+
+            // To copy a file to another location and 
+            // overwrite the destination file if it already exists.
+
+            if ((Directory.Exists(TargetPath02)) && (Directory.Exists(TargetPath02)))
+            { 
+                System.IO.File.Copy(SourceFilePath01, TargetFilePath01, true);
+                System.IO.File.Copy(SourceFilePath02, TargetFilePath02, true);                
+            }
+            else
+            {
+                Directory.CreateDirectory(TargetPath01);
+                System.IO.File.Copy(SourceFilePath01, TargetFilePath01, true);
+                Directory.CreateDirectory(TargetPath02);
+                System.IO.File.Copy(SourceFilePath02, TargetFilePath02, true);        
+            }
+
+
+            //Executing ReadTextFile x2 for Two AppSrv
+            int i = 1;
+            for (i = 1; i < 3; i++)
+            {
+                if (i == 1)
+                {
+                    ReadTextFile(TargetFilePath01, ErrorLogFile01);
+                }
+                else
+                {
+                    ReadTextFile(TargetFilePath02, ErrorLogFile02);
+                }
+            }
+        }
+
+        public static void ReadTextFile(string Target_FilePath, string Error_LogFile)
+        {
+            // Read each line of the file into a string array. 
+            // Each element of the array is one line of the file.
+            
+                List<ListModel> List = new List<ListModel>();
+
+                string[] lines = System.IO.File.ReadAllLines(Target_FilePath);
+                //Seperating each line
+                foreach (var line in lines)
+                {
+                    //removing spaces
+                    if (line.Trim() != "")
+                    {
+                        ListModel list = new ListModel();
+                        list.Line = line;
+                        //Date encounter : new line begins
+                        if (IsDate(line.Substring(1, 12))) //[01/01/2018] date format 
+                        {
+                            list.isFirstLine = true;
+                            if (line.ToLower().Contains("error"))
+                            {
+                                list.isException = true;
+                                List.Add(list);
+
+                                StreamWriter writer = new StreamWriter(Error_LogFile, true);
+                                DisplayException(List, writer);
+                                writer.Close();
+                            
+                        }
+                    }
+
+                }
+            }
+        }
+
+
+
+        public static bool IsDate(Object obj)
+        {
+            string strDate = obj.ToString();
+            try
+            {
+                DateTime dt = DateTime.Parse(strDate);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        public static void DisplayException(List<ListModel> list, StreamWriter writer)
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                string exceptionMsg = "";
+
+                if (list[i].isException && list[i].isFirstLine)
+                {
+                    exceptionMsg = list[i].Line;
+                }
+                writer.WriteLine(exceptionMsg);
+
+            }
+        }
+
+
+        public static void SendMail()
+        {
+
+            if (FileExists() == true)
+            {
+                MailMessage mail = new MailMessage(MailFrom, MailTo);
+                SmtpClient client = new SmtpClient();
+                client.Port = 25;
+                client.DeliveryMethod = SmtpDeliveryMethod.Network;
+                client.UseDefaultCredentials = false;
+                client.Host = "smtp.tenethealth.net";
+
+                mail.Subject = MailSubject;
+                mail.Body = MailBody;
+
+                //if error in AppSrv01
+                if (File.Exists(ErrorLogFile01))
+                    mail.Attachments.Add(new Attachment(ErrorLogFile01));
+                //if error in AppSrv02
+                if (File.Exists(ErrorLogFile02))
+                    mail.Attachments.Add(new Attachment(ErrorLogFile01));
+
+                client.Send(mail);
+                mail.Dispose();
+                DeleteDir();
+            }
+            else
+            {
+                DeleteDir();
+            }
+        }
+
+
+        public static void DeleteDir()
+        {
+
+            System.IO.DirectoryInfo di = new DirectoryInfo(DeleteDirectory);
+                
+                //Deleting Files
+                foreach (FileInfo file in di.GetFiles())
+                    {
+                        file.Delete(); 
+                    }
+                //Deleting Directories
+                foreach (DirectoryInfo dir in di.GetDirectories())
+                {
+                    dir.Delete(true);
+                }
+        }
+
+        public static bool FileExists()
+        {
+            //Check if Error Log File is created
+            if (File.Exists(ErrorLogFile01) || File.Exists(ErrorLogFile02))
+                return true;
+            return false;
+        }
+
+        public class ListModel
+        {
+            public string Line { get; set; }
+            public bool isFirstLine { get; set; }
+            public bool isException { get; set; }
+        }
+    }
+}
+
